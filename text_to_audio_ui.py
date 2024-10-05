@@ -2,15 +2,18 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QTextEdit, QSpinBox, QDoubleSpinBox,
     QPushButton, QComboBox, QHBoxLayout
 )
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt
 
 class TextToAudioUI(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Text to Audio Converter")
+        self.setWindowTitle("Read It by Obed KANI")
         self.setGeometry(100, 100, 500, 450)
-        self.setStyleSheet("background-color: #f5f5f5;")  # Set a light background color
+        self.setStyleSheet("background-color: #f5f5f5;")  
+        
+        # Set the application icon (replace with the path to your icon file)
+        self.setWindowIcon(QIcon(r"C:\Users\PC\Desktop\new readit\image.png"))  # Ensure the path is correct
 
         self.init_ui()
 
