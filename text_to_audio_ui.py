@@ -9,10 +9,10 @@ class TextToAudioUI(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Read It by Obed KANI")
-        self.setGeometry(100, 100, 500, 450)
-        self.setStyleSheet("background-color: #f5f5f5;")  
+        self.setGeometry(100, 100, 500, 500)  # Adjusted for new components
+        self.setStyleSheet("background-color: #f5f5f5;")
         
-        # Set the application icon (replace with the path to your icon file)
+        # Set the application icon
         self.setWindowIcon(QIcon(r"C:\Users\PC\Desktop\new readit\image.png"))  # Ensure the path is correct
 
         self.init_ui()
@@ -58,11 +58,30 @@ class TextToAudioUI(QWidget):
         self.language_combo.setStyleSheet("border: 1px solid #ccc; border-radius: 5px; padding: 5px;")
         layout.addWidget(self.language_combo)
 
+        # Rollback Section
+        rollback_layout = QHBoxLayout()
+        rollback_layout.addWidget(QLabel("Rollback Seconds:"))
+        self.rollback_spin = QSpinBox()
+        self.rollback_spin.setRange(1, 60)  # Limit rollback to 60 seconds
+        self.rollback_spin.setValue(5)  # Default rollback time
+        rollback_layout.addWidget(self.rollback_spin)
+
+        self.rollback_button = QPushButton("Rollback")
+        self.rollback_button.setEnabled(False)
+        self.rollback_button.setStyleSheet("background-color: #2196F3; color: white; border: none; padding: 10px; border-radius: 5px;")
+        rollback_layout.addWidget(self.rollback_button)
+        layout.addLayout(rollback_layout)
+
         # Control Buttons
         button_layout = QHBoxLayout()
         self.play_button = QPushButton("Play")
         self.play_button.setStyleSheet("background-color: #4CAF50; color: white; border: none; padding: 10px; border-radius: 5px;")
         button_layout.addWidget(self.play_button)
+
+        self.pause_button = QPushButton("Pause")
+        self.pause_button.setEnabled(False)
+        self.pause_button.setStyleSheet("background-color: #FF9800; color: white; border: none; padding: 10px; border-radius: 5px;")
+        button_layout.addWidget(self.pause_button)
 
         self.stop_button = QPushButton("Stop")
         self.stop_button.setEnabled(False)

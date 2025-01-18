@@ -3,7 +3,7 @@ import uuid
 import tempfile
 from PyQt5.QtCore import QUrl
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
-from PyQt5.QtWidgets import QMessageBox  # Add this import
+from PyQt5.QtWidgets import QMessageBox
 import pyttsx3
 from audio_utils import generate_audio_file
 from text_to_audio_ui import TextToAudioUI
@@ -23,7 +23,9 @@ class TextToAudioApp(TextToAudioUI):
 
         # Connect signals
         self.play_button.clicked.connect(self.play_audio)
+        self.pause_button.clicked.connect(self.pause_audio)
         self.stop_button.clicked.connect(self.stop_audio)
+        self.rollback_button.clicked.connect(self.rollback_audio)  # Connect rollback button
 
     def populate_languages(self):
         voices = self.engine.getProperty('voices')
@@ -66,6 +68,17 @@ class TextToAudioApp(TextToAudioUI):
 
         self.play_button.setEnabled(False)
         self.stop_button.setEnabled(True)
+        self.pause_button.setEnabled(True)
+        self.pause_button.setText("Pause")
+        self.rollback_button.setEnabled(True)  # Enable rollback button
+
+    def pause_audio(self):
+        if self.player.state() == QMediaPlayer.PlayingState:
+            self.player.pause()
+            self.pause_button.setText("Resume")
+        elif self.player.state() == QMediaPlayer.PausedState:
+            self.player.play()
+            self.pause_button.setText("Pause")
 
     def stop_audio(self):
         self.player.stop()
@@ -73,6 +86,16 @@ class TextToAudioApp(TextToAudioUI):
         self.player.error.disconnect(self.handle_player_error)
         self.play_button.setEnabled(True)
         self.stop_button.setEnabled(False)
+        self.pause_button.setEnabled(False)
+        self.pause_button.setText("Pause")
+        self.rollback_button.setEnabled(False)  # Disable rollback button
+
+    def rollback_audio(self):
+        """Rolls back the playback by the number of seconds specified in the UI."""
+        rollback_seconds = self.rollback_spin.value()  # Get seconds from spin box
+        current_position = self.player.position()  # Get current playback position in ms
+        rollback_position = max(0, current_position - (rollback_seconds * 1000))  # Calculate new position
+        self.player.setPosition(rollback_position)  # Update playback position
 
     def handle_media_status(self, status):
         if status == QMediaPlayer.EndOfMedia:
@@ -86,6 +109,9 @@ class TextToAudioApp(TextToAudioUI):
                 QMessageBox.information(self, "Playback Finished", "Audio playback completed.")
                 self.play_button.setEnabled(True)
                 self.stop_button.setEnabled(False)
+                self.pause_button.setEnabled(False)
+                self.pause_button.setText("Pause")
+                self.rollback_button.setEnabled(False)  # Disable rollback button
 
     def handle_player_error(self, error):
         if error != QMediaPlayer.NoError:
@@ -93,9 +119,11 @@ class TextToAudioApp(TextToAudioUI):
             QMessageBox.critical(self, "Playback Error", f"Error: {error_string}")
             self.play_button.setEnabled(True)
             self.stop_button.setEnabled(False)
+            self.pause_button.setEnabled(False)
+            self.pause_button.setText("Pause")
+            self.rollback_button.setEnabled(False)  # Disable rollback button
 
     def closeEvent(self, event):
         if self.player.state() == QMediaPlayer.PlayingState:
             self.player.stop()
-
         event.accept()
