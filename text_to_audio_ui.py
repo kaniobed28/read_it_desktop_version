@@ -4,8 +4,15 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-import ollama 
+import requests
+import json
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+api_key = os.getenv("API_KEY")
+api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
 
 class WorkerThread(QThread):
     response_signal = pyqtSignal(str)
@@ -16,13 +23,17 @@ class WorkerThread(QThread):
 
     def run(self):
         try:
-            # Simulate the AI response generation
-            response = ollama.chat(model="mistral", messages=[{"role": "user", "content":  self.prompt_text}])
-            ai_text = response["message"]["content"]
+            # Make request to Gemini API
+            headers = {"Content-Type": "application/json"}
+            data = {
+                "contents": [{"parts": [{"text": self.prompt_text}]}]
+            }
+            response = requests.post(api_url, headers=headers, json=data)
+            response.raise_for_status()
+            ai_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
         except Exception as e:
             ai_text = f"Error: {str(e)}"
         self.response_signal.emit(ai_text)
-
 
 class TextToAudioUI(QWidget):
     def __init__(self):
