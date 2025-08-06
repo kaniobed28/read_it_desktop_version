@@ -54,16 +54,25 @@ class DictionaryThread(QThread):
             target_language = language_map.get(self.language, "English")
             # Use different prompts for single words vs. phrases/sentences
             if ' ' in self.text.strip():
-                prompt = f"Provide a concise explanation of the meaning of the phrase or sentence '{self.text}' in {target_language} in one or two sentences."
+                prompt = f"In {target_language}, provide a clear explanation of the phrase or sentence '{self.text}' including: 1) its meaning, 2) the context in which it is typically used, and 3) an example sentence or phrase using it in a similar context. Keep the response concise, under 100 words."
             else:
-                prompt = f"Provide a concise explanation of the meaning of the word '{self.text}' in {target_language} in one or two sentences."
+                prompt = f"In {target_language}, provide a clear explanation of the word '{self.text}' including: 1) its definition, 2) its part of speech, 3) the context in which it is typically used, and 4) an example sentence using it. Keep the response concise, under 100 words."
             headers = {"Content-Type": "application/json"}
             data = {
                 "contents": [{"parts": [{"text": prompt}]}]
             }
             response = requests.post(api_url, headers=headers, json=data)
             response.raise_for_status()
-            explanation = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            response_data = response.json()
+            # Check if candidates and content are available
+            if "candidates" in response_data and response_data["candidates"]:
+                explanation = response_data["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                explanation = "Error: No valid response from API"
+        except requests.exceptions.RequestException as e:
+            explanation = f"Network Error: {str(e)}"
+        except KeyError as e:
+            explanation = f"API Response Error: Invalid response format ({str(e)})"
         except Exception as e:
             explanation = f"Error: {str(e)}"
         self.definition_signal.emit(self.text, explanation)
@@ -159,7 +168,7 @@ class TextToAudioUI(QWidget):
         self.language_combo.setStyleSheet("border: 1px solid #ccc; border-radius: 5px; padding: 5px;")
         layout.addWidget(self.language_combo)
 
-        # Explanation Language Selection (new)
+        # Explanation Language Selection
         layout.addWidget(QLabel("Select Explanation Language:"))
         self.explanation_language_combo = QComboBox()
         self.explanation_language_combo.setStyleSheet("border: 1px solid #ccc; border-radius: 5px; padding: 5px;")
@@ -237,11 +246,3 @@ class TextToAudioUI(QWidget):
             f"<b>{text}</b>: {explanation}",
             self.text_edit
         )
-
-if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication
-    import sys
-    app = QApplication(sys.argv)
-    window = TextToAudioUI()
-    window.show()
-    sys.exit(app.exec_())
